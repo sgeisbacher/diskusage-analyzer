@@ -38,9 +38,9 @@ func TestGetHotspotsSorting(t *testing.T) {
 
 	ctx := &DirHotspotsContext{
 		dirInfos: DirInfos{
-			&DirInfo{"/stefan/music", 0, 1000},
-			&DirInfo{"/stefan", 0, 1100},
-			&DirInfo{"/stefan/code", 0, 1020},
+			&DirInfo{"/stefan/music", 0, 1000, nil},
+			&DirInfo{"/stefan", 0, 1100, nil},
+			&DirInfo{"/stefan/code", 0, 1020, nil},
 		},
 	}
 
@@ -88,9 +88,9 @@ func TestGetHotspotsTopLimit(t *testing.T) {
 
 	ctx := &DirHotspotsContext{
 		dirInfos: DirInfos{
-			&DirInfo{"/stefan/music", 0, 1000},
-			&DirInfo{"/stefan", 0, 1100},
-			&DirInfo{"/stefan/code", 0, 1020},
+			&DirInfo{"/stefan/music", 0, 1000, nil},
+			&DirInfo{"/stefan", 0, 1100, nil},
+			&DirInfo{"/stefan/code", 0, 1020, nil},
 		},
 	}
 

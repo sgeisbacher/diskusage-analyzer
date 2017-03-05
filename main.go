@@ -30,6 +30,7 @@ func main() {
 
 	flag.Parse()
 	root := flag.Arg(0)
+	dirHotspotsCtx.root = root
 
 	fmt.Println("collecting infos ...")
 	filepath.Walk(root, visit)

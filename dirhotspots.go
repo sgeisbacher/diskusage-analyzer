@@ -12,11 +12,13 @@ type DirInfo struct {
 	Name      string
 	TotalSize int64
 	Size      int64
+	Children  []string
 }
 
 type DirInfos []*DirInfo
 type DirInfoIdx map[string]*DirInfo
 type DirHotspotsContext struct {
+	root       string
 	dirInfos   DirInfos
 	dirInfoIdx DirInfoIdx
 }
@@ -57,6 +59,23 @@ func (ctx *DirHotspotsContext) GetHotspots(top int) DirInfos {
 	sort.Sort(ctx.dirInfos)
 	limit := getLimit(len(ctx.dirInfos), top)
 	return ctx.dirInfos[:limit]
+}
+
+func (ctx *DirHotspotsContext) CalcTotalSizes() {
+	ctx.calcTotalSizes(ctx.root)
+}
+
+func (ctx *DirHotspotsContext) calcTotalSizes(path string) int64 {
+	dirInfo, found := ctx.dirInfoIdx[path]
+	if !found {
+		return 0
+	}
+	sum := dirInfo.Size
+	for _, childPath := range dirInfo.Children {
+		sum += ctx.calcTotalSizes(childPath)
+	}
+	dirInfo.TotalSize = sum
+	return sum
 }
 
 func getLimit(size int, top int) int {
