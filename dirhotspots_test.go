@@ -44,7 +44,7 @@ func TestGetHotspotsSorting(t *testing.T) {
 		},
 	}
 
-	dirHotspots := ctx.GetHotspots(3)
+	dirHotspots := ctx.GetDirHotspots(3)
 
 	Expect(len(dirHotspots)).To(Equal(3))
 	Expect(dirHotspots[0].Name).To(Equal("/stefan"))
@@ -95,7 +95,7 @@ func TestGetHotspotsTopLimit(t *testing.T) {
 	}
 
 	for _, testData := range tableTestData {
-		hotspots := ctx.GetHotspots(testData.topNum)
+		hotspots := ctx.GetDirHotspots(testData.topNum)
 		Expect(len(hotspots)).To(Equal(testData.expectedLen))
 	}
 }

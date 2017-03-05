@@ -55,7 +55,7 @@ func (ctx *DirHotspotsContext) getOrCreateDirInfo(path string) *DirInfo {
 	return dirInfo
 }
 
-func (ctx *DirHotspotsContext) GetHotspots(top int) DirInfos {
+func (ctx *DirHotspotsContext) GetDirHotspots(top int) DirInfos {
 	sort.Sort(ctx.dirInfos)
 	limit := getLimit(len(ctx.dirInfos), top)
 	return ctx.dirInfos[:limit]
