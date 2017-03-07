@@ -38,5 +38,5 @@ func main() {
 	fmt.Println("analyzing ...")
 	fmt.Printf("file-hotspots:\n%v\n", fileHotspots)
 	fmt.Printf("directory-hotspots:\n%v\n", dirHotspotsCtx.GetDirHotspots(TOP_FILES))
-	fmt.Printf("tree-hotspots:\n%v\n\n", "<not-yet-implemented>")
+	fmt.Printf("tree-hotspots:\n%v\n\n", dirHotspotsCtx.GetTreeHotspots(3))
 }

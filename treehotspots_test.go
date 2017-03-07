@@ -1,14 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	. "github.com/onsi/gomega"
 )
 
-func TestTotalSizeCalculation(t *testing.T) {
-	RegisterTestingT(t)
-
+func buildDirectoryTree() *DirHotspotsContext {
 	ctx := &DirHotspotsContext{
 		root:       "/home",
 		dirInfos:   DirInfos{},
@@ -20,9 +19,8 @@ func TestTotalSizeCalculation(t *testing.T) {
 	addDirInfo(ctx, "/home/stefan/code", 0, []string{"/home/stefan/code/go", "/home/stefan/code/js"})
 	addDirInfo(ctx, "/home/stefan/code/go", 250, nil)
 	addDirInfo(ctx, "/home/stefan/code/js", 350, nil)
-	addDirInfo(ctx, "/home/stefan/private", 210, []string{"/home/stefan/private/movies", "/home/stefan/private/tvshows", "/home/stefan/private/docs"})
-	addDirInfo(ctx, "/home/stefan/private/movies", 25000, nil)
-	addDirInfo(ctx, "/home/stefan/private/tvshows", 12000, nil)
+	addDirInfo(ctx, "/home/stefan/private", 210, []string{"/home/stefan/private/docs", "/home/stefan/private/movies"})
+	addDirInfo(ctx, "/home/stefan/private/movies", 37000, nil)
 	addDirInfo(ctx, "/home/stefan/private/docs", 20, nil)
 	addDirInfo(ctx, "/home/stefan/multimedia", 0, []string{"/home/stefan/multimedia/private"})
 	addDirInfo(ctx, "/home/stefan/multimedia/private", 0, []string{"/home/stefan/multimedia/private/photos", "/home/stefan/multimedia/private/music"})
@@ -32,6 +30,13 @@ func TestTotalSizeCalculation(t *testing.T) {
 	addDirInfo(ctx, "/home/stefan/multimedia/private/music/rap", 500, nil)
 	addDirInfo(ctx, "/home/stefan/multimedia/private/music/hiphop", 7000, nil)
 
+	return ctx
+}
+
+func TestCalcTotalSizes(t *testing.T) {
+	RegisterTestingT(t)
+
+	ctx := buildDirectoryTree()
 	ctx.CalcTotalSizes()
 
 	tableTestData := []struct {
@@ -51,6 +56,45 @@ func TestTotalSizeCalculation(t *testing.T) {
 	for _, testData := range tableTestData {
 		Expect(ctx.dirInfoIdx[testData.folderPath].TotalSize).To(Equal(testData.expectedTotalSize))
 	}
+}
+
+func TestIsPotentialTreeHotspot(t *testing.T) {
+	RegisterTestingT(t)
+
+	ctx := buildDirectoryTree()
+	ctx.CalcTotalSizes()
+
+	filter := isPotentialTreeHotspot(ctx, 0.8)
+
+	tableTestData := []struct {
+		dirPath        string
+		expectedResult bool
+	}{
+		{"/home/stefan/private", false},
+		{"/home", false},
+		{"/home/stefan/code", true},
+		{"/home/stefan/multimedia", false},
+		{"/home/stefan/multimedia/private", true},
+		{"/home/stefan/private/movies", false},
+	}
+
+	for _, testData := range tableTestData {
+		dirInfo := ctx.dirInfoIdx[testData.dirPath]
+		Expect(filter(dirInfo)).To(Equal(testData.expectedResult), fmt.Sprintf("%v should be %v", testData.dirPath, testData.expectedResult))
+	}
+}
+
+func TestGetTreeHotspots(t *testing.T) {
+	RegisterTestingT(t)
+
+	ctx := buildDirectoryTree()
+	hotspots := ctx.GetTreeHotspots(100)
+
+	Expect(len(hotspots)).To(Equal(4))
+	Expect(hotspots[0].Name).To(Equal("/home/stefan"))
+	Expect(hotspots[1].Name).To(Equal("/home/stefan/multimedia/private"))
+	Expect(hotspots[2].Name).To(Equal("/home/stefan/multimedia/private/music"))
+	Expect(hotspots[3].Name).To(Equal("/home/stefan/code"))
 }
 
 func addDirInfo(ctx *DirHotspotsContext, name string, size int64, children []string) {
