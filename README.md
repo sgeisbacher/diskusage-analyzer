@@ -4,7 +4,7 @@ finds diskusage hotspots (files, dirs, treenodes)
 Current Features:
 ![Screenshot](https://raw.githubusercontent.com/sgeisbacher/diskusageanalyzer/master/docs/screenshot01.png)
 # Installation
-    go get github.com/sgeisbacher/diskusageanalyzer
+    go get github.com/sgeisbacher/diskusage-analyzer
 # Usage
-    diskusageanalyzer <dir>
+    diskusage-analyzer
 
