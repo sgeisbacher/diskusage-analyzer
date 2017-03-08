@@ -6,31 +6,66 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestDirInfosAdd(t *testing.T) {
-	RegisterTestingT(t)
-
+func createSampleCtx() *DirHotspotsContext {
 	ctx := &DirHotspotsContext{
+		root:       ".",
 		dirInfos:   DirInfos{},
 		dirInfoIdx: DirInfoIdx{},
 	}
-	ctx.Add(FileInfo{"/stefan/file1.txt", 1000})
-	ctx.Add(FileInfo{"/stefan/file2.txt", 1020})
-	ctx.Add(FileInfo{"/stefan/code/file1.txt", 1040})
-	ctx.Add(FileInfo{"/stefan/file3.txt", 1060})
-	ctx.Add(FileInfo{"/stefan/file4.txt", 1080})
-	ctx.Add(FileInfo{"/stefan/music/song1.mp3", 1100})
-	ctx.Add(FileInfo{"/stefan/code/file2.txt", 1120})
 
-	Expect(len(ctx.dirInfos)).To(Equal(3))
+	ctx.AddDir(&DirInfo{Name: "."})
+	ctx.AddDir(&DirInfo{Name: "stefan"})
+	ctx.AddFile(FileInfo{"stefan/file1.txt", 1000})
+	ctx.AddFile(FileInfo{"stefan/file2.txt", 1020})
+	ctx.AddDir(&DirInfo{Name: "stefan/code"})
+	ctx.AddFile(FileInfo{"stefan/code/file1.txt", 1040})
+	ctx.AddFile(FileInfo{"stefan/file3.txt", 1060})
+	ctx.AddFile(FileInfo{"stefan/file4.txt", 1080})
+	ctx.AddDir(&DirInfo{Name: "stefan/music"})
+	ctx.AddFile(FileInfo{"stefan/music/song1.mp3", 1100})
+	ctx.AddFile(FileInfo{"stefan/code/file2.txt", 1120})
+	return ctx
+}
 
-	Expect(ctx.dirInfos[0].Name).To(Equal("/stefan"))
-	Expect(ctx.dirInfos[0].Size).To(Equal(int64(4160)))
+func TestAddFileDirSizeCalc(t *testing.T) {
+	RegisterTestingT(t)
 
-	Expect(ctx.dirInfos[1].Name).To(Equal("/stefan/code"))
-	Expect(ctx.dirInfos[1].Size).To(Equal(int64(2160)))
+	ctx := createSampleCtx()
 
-	Expect(ctx.dirInfos[2].Name).To(Equal("/stefan/music"))
-	Expect(ctx.dirInfos[2].Size).To(Equal(int64(1100)))
+	Expect(len(ctx.dirInfos)).To(Equal(4))
+
+	Expect(ctx.dirInfos[0].Name).To(Equal("."))
+	Expect(ctx.dirInfos[0].Size).To(Equal(int64(0)))
+
+	Expect(ctx.dirInfos[1].Name).To(Equal("stefan"))
+	Expect(ctx.dirInfos[1].Size).To(Equal(int64(4160)))
+
+	Expect(ctx.dirInfos[2].Name).To(Equal("stefan/code"))
+	Expect(ctx.dirInfos[2].Size).To(Equal(int64(2160)))
+
+	Expect(ctx.dirInfos[3].Name).To(Equal("stefan/music"))
+	Expect(ctx.dirInfos[3].Size).To(Equal(int64(1100)))
+}
+
+func TestAddDirChildren(t *testing.T) {
+	RegisterTestingT(t)
+
+	ctx := createSampleCtx()
+
+	expectedChildrenMap := map[string][]string{
+		".":            []string{"stefan"},
+		"stefan":       []string{"stefan/code", "stefan/music"},
+		"stefan/code":  []string{},
+		"stefan/music": []string{},
+	}
+
+	for _, dir := range ctx.dirInfos {
+		expectedChildren := expectedChildrenMap[dir.Name]
+		Expect(len(dir.Children)).To(Equal(len(expectedChildren)), dir.Name)
+		for i, expectedChild := range expectedChildren {
+			Expect(dir.Children[i]).To(Equal(expectedChild))
+		}
+	}
 }
 
 func TestGetHotspotsSorting(t *testing.T) {

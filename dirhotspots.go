@@ -5,8 +5,6 @@ import (
 	"math"
 	"path/filepath"
 	"sort"
-
-	"github.com/dustin/go-humanize"
 )
 
 type DirInfo struct {
@@ -34,22 +32,31 @@ func (dir DirInfosTotalSizeDescSorter) Len() int           { return len(dir) }
 func (dir DirInfosTotalSizeDescSorter) Swap(i, j int)      { dir[i], dir[j] = dir[j], dir[i] }
 func (dir DirInfosTotalSizeDescSorter) Less(i, j int) bool { return dir[i].TotalSize > dir[j].TotalSize }
 
-func (infos DirInfos) String() string {
-	result := ""
-	for _, info := range infos {
-		result += info.String() + "\n"
-	}
-	return result
-}
-
-func (info DirInfo) String() string {
-	return fmt.Sprintf("%10s  %v", humanize.Bytes(uint64(info.Size)), info.Name)
-}
-
-func (ctx *DirHotspotsContext) Add(fileInfo FileInfo) {
+func (ctx *DirHotspotsContext) AddFile(fileInfo FileInfo) {
 	fileParent := filepath.Dir(fileInfo.Name)
-	dirInfo := ctx.getOrCreateDirInfo(fileParent)
+	if fileParent == "." {
+		return
+	}
+	dirInfo, found := ctx.dirInfoIdx[fileParent]
+	if !found {
+		fmt.Println("WARN: dir", fileParent, "NOT FOUND")
+		return
+	}
 	dirInfo.Size += fileInfo.Size
+}
+
+func (ctx *DirHotspotsContext) AddDir(dirInfo *DirInfo) {
+	ctx.dirInfos = append(ctx.dirInfos, dirInfo)
+	ctx.dirInfoIdx[dirInfo.Name] = dirInfo
+	if dirInfo.Name == ctx.root {
+		return
+	}
+	parent, found := ctx.dirInfoIdx[filepath.Dir(dirInfo.Name)]
+	if !found {
+		fmt.Println("WARN: PARENT NOT FOUND:", filepath.Dir(dirInfo.Name))
+		return
+	}
+	parent.Children = append(parent.Children, dirInfo.Name)
 }
 
 func (ctx *DirHotspotsContext) getOrCreateDirInfo(path string) *DirInfo {
@@ -58,6 +65,15 @@ func (ctx *DirHotspotsContext) getOrCreateDirInfo(path string) *DirInfo {
 		dirInfo = &DirInfo{Name: path}
 		ctx.dirInfoIdx[path] = dirInfo
 		ctx.dirInfos = append(ctx.dirInfos, dirInfo)
+		parent, found := ctx.dirInfoIdx[filepath.Dir(path)]
+		if !found {
+			fmt.Println("WARN: parent", filepath.Dir(path), "NOT FOUND")
+			return dirInfo
+		}
+		if parent.Children == nil {
+			parent.Children = []string{}
+		}
+		parent.Children = append(parent.Children, path)
 	}
 	return dirInfo
 }
