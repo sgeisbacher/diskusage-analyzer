@@ -1,4 +1,5 @@
 # DiskUsageAnalyzer
+[![Build Status](https://travis-ci.org/sgeisbacher/diskusage-analyzer.svg?branch=master)](https://travis-ci.org/sgeisbacher/diskusage-analyzer) [![Go Report Card](https://goreportcard.com/badge/github.com/sgeisbacher/diskusage-analyzer)](https://goreportcard.com/report/github.com/sgeisbacher/diskusage-analyzer)  
 finds diskusage hotspots (files, dirs, treenodes)
 # Screenshots
 Current Features:
