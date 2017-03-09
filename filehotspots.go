@@ -32,5 +32,5 @@ func (infos FileInfos) String() string {
 }
 
 func (info FileInfo) String() string {
-	return fmt.Sprintf("%10s   %v", humanize.Bytes(uint64(info.Size)), info.Name)
+	return fmt.Sprintf("%10s  %v", humanize.Bytes(uint64(info.Size)), info.Name)
 }
