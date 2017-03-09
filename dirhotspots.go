@@ -7,30 +7,30 @@ import (
 	"sort"
 )
 
-type DirInfo struct {
+type Dir struct {
 	Name      string
 	TotalSize int64
 	Size      int64
 	Children  []string
 }
 
-type DirInfos []*DirInfo
-type DirInfosSizeDescSorter []*DirInfo
-type DirInfosTotalSizeDescSorter []*DirInfo
-type DirInfoIdx map[string]*DirInfo
+type Dirs []*Dir
+type DirsSizeDescSorter []*Dir
+type DirsTotalSizeDescSorter []*Dir
+type DirIdx map[string]*Dir
 type AnalyzerContext struct {
 	root       string
-	dirInfos   DirInfos
-	dirInfoIdx DirInfoIdx
+	dirInfos   Dirs
+	dirInfoIdx DirIdx
 }
 
-func (dir DirInfosSizeDescSorter) Len() int           { return len(dir) }
-func (dir DirInfosSizeDescSorter) Swap(i, j int)      { dir[i], dir[j] = dir[j], dir[i] }
-func (dir DirInfosSizeDescSorter) Less(i, j int) bool { return dir[i].Size > dir[j].Size }
+func (dir DirsSizeDescSorter) Len() int           { return len(dir) }
+func (dir DirsSizeDescSorter) Swap(i, j int)      { dir[i], dir[j] = dir[j], dir[i] }
+func (dir DirsSizeDescSorter) Less(i, j int) bool { return dir[i].Size > dir[j].Size }
 
-func (dir DirInfosTotalSizeDescSorter) Len() int           { return len(dir) }
-func (dir DirInfosTotalSizeDescSorter) Swap(i, j int)      { dir[i], dir[j] = dir[j], dir[i] }
-func (dir DirInfosTotalSizeDescSorter) Less(i, j int) bool { return dir[i].TotalSize > dir[j].TotalSize }
+func (dir DirsTotalSizeDescSorter) Len() int           { return len(dir) }
+func (dir DirsTotalSizeDescSorter) Swap(i, j int)      { dir[i], dir[j] = dir[j], dir[i] }
+func (dir DirsTotalSizeDescSorter) Less(i, j int) bool { return dir[i].TotalSize > dir[j].TotalSize }
 
 func (ctx *AnalyzerContext) AddFile(fileInfo FileInfo) {
 	fileParent := filepath.Dir(fileInfo.Name)
@@ -45,7 +45,7 @@ func (ctx *AnalyzerContext) AddFile(fileInfo FileInfo) {
 	dirInfo.Size += fileInfo.Size
 }
 
-func (ctx *AnalyzerContext) AddDir(dirInfo *DirInfo) {
+func (ctx *AnalyzerContext) AddDir(dirInfo *Dir) {
 	ctx.dirInfos = append(ctx.dirInfos, dirInfo)
 	ctx.dirInfoIdx[dirInfo.Name] = dirInfo
 	if dirInfo.Name == ctx.root {
@@ -59,10 +59,10 @@ func (ctx *AnalyzerContext) AddDir(dirInfo *DirInfo) {
 	parent.Children = append(parent.Children, dirInfo.Name)
 }
 
-func (ctx *AnalyzerContext) getOrCreateDirInfo(path string) *DirInfo {
+func (ctx *AnalyzerContext) getOrCreateDir(path string) *Dir {
 	dirInfo := ctx.dirInfoIdx[path]
 	if dirInfo == nil {
-		dirInfo = &DirInfo{Name: path}
+		dirInfo = &Dir{Name: path}
 		ctx.dirInfoIdx[path] = dirInfo
 		ctx.dirInfos = append(ctx.dirInfos, dirInfo)
 		parent, found := ctx.dirInfoIdx[filepath.Dir(path)]
@@ -78,25 +78,25 @@ func (ctx *AnalyzerContext) getOrCreateDirInfo(path string) *DirInfo {
 	return dirInfo
 }
 
-func (ctx *AnalyzerContext) GetDirHotspots(top int) DirInfos {
-	sort.Sort(DirInfosSizeDescSorter(ctx.dirInfos))
+func (ctx *AnalyzerContext) GetDirHotspots(top int) Dirs {
+	sort.Sort(DirsSizeDescSorter(ctx.dirInfos))
 	limit := getLimit(len(ctx.dirInfos), top)
 	return ctx.dirInfos[:limit]
 }
 
-type DirInfoFilter func(di *DirInfo) bool
+type DirFilter func(di *Dir) bool
 
-func (ctx *AnalyzerContext) GetTreeHotspots(top int) DirInfos {
+func (ctx *AnalyzerContext) GetTreeHotspots(top int) Dirs {
 	ctx.CalcTotalSizes()
 	hotspots := ctx.dirInfos.Filter(isPotentialTreeHotspot(ctx, 0.8))
 
-	sort.Sort(DirInfosTotalSizeDescSorter(hotspots))
+	sort.Sort(DirsTotalSizeDescSorter(hotspots))
 	limit := getLimit(len(hotspots), top)
 	return hotspots[:limit]
 }
 
-func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirInfoFilter {
-	return func(dir *DirInfo) bool {
+func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirFilter {
+	return func(dir *Dir) bool {
 		maxRelDiff := float64(0)
 		if len(dir.Children) == 0 {
 			return false
@@ -117,8 +117,8 @@ func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirInfoFilt
 	}
 }
 
-func (vs DirInfos) Filter(f DirInfoFilter) DirInfos {
-	vsf := make(DirInfos, 0)
+func (vs Dirs) Filter(f DirFilter) Dirs {
+	vsf := make(Dirs, 0)
 	for _, v := range vs {
 		if f(v) {
 			vsf = append(vsf, v)

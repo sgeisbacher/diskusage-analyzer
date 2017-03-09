@@ -10,25 +10,25 @@ import (
 func buildDirectoryTree() *AnalyzerContext {
 	ctx := &AnalyzerContext{
 		root:       "/home",
-		dirInfos:   DirInfos{},
-		dirInfoIdx: DirInfoIdx{},
+		dirInfos:   Dirs{},
+		dirInfoIdx: DirIdx{},
 	}
 
-	addDirInfo(ctx, "/home", 0, []string{"/home/stefan"})
-	addDirInfo(ctx, "/home/stefan", 10, []string{"/home/stefan/code", "/home/stefan/private", "/home/stefan/multimedia"})
-	addDirInfo(ctx, "/home/stefan/code", 0, []string{"/home/stefan/code/go", "/home/stefan/code/js"})
-	addDirInfo(ctx, "/home/stefan/code/go", 250, nil)
-	addDirInfo(ctx, "/home/stefan/code/js", 350, nil)
-	addDirInfo(ctx, "/home/stefan/private", 210, []string{"/home/stefan/private/docs", "/home/stefan/private/movies"})
-	addDirInfo(ctx, "/home/stefan/private/movies", 37000, nil)
-	addDirInfo(ctx, "/home/stefan/private/docs", 20, nil)
-	addDirInfo(ctx, "/home/stefan/multimedia", 0, []string{"/home/stefan/multimedia/private"})
-	addDirInfo(ctx, "/home/stefan/multimedia/private", 0, []string{"/home/stefan/multimedia/private/photos", "/home/stefan/multimedia/private/music"})
-	addDirInfo(ctx, "/home/stefan/multimedia/private/photos", 6000, nil)
-	addDirInfo(ctx, "/home/stefan/multimedia/private/music", 0, []string{"/home/stefan/multimedia/private/music/rock", "/home/stefan/multimedia/private/music/rap", "/home/stefan/multimedia/private/music/hiphop"})
-	addDirInfo(ctx, "/home/stefan/multimedia/private/music/rock", 4000, nil)
-	addDirInfo(ctx, "/home/stefan/multimedia/private/music/rap", 500, nil)
-	addDirInfo(ctx, "/home/stefan/multimedia/private/music/hiphop", 7000, nil)
+	addDir(ctx, "/home", 0, []string{"/home/stefan"})
+	addDir(ctx, "/home/stefan", 10, []string{"/home/stefan/code", "/home/stefan/private", "/home/stefan/multimedia"})
+	addDir(ctx, "/home/stefan/code", 0, []string{"/home/stefan/code/go", "/home/stefan/code/js"})
+	addDir(ctx, "/home/stefan/code/go", 250, nil)
+	addDir(ctx, "/home/stefan/code/js", 350, nil)
+	addDir(ctx, "/home/stefan/private", 210, []string{"/home/stefan/private/docs", "/home/stefan/private/movies"})
+	addDir(ctx, "/home/stefan/private/movies", 37000, nil)
+	addDir(ctx, "/home/stefan/private/docs", 20, nil)
+	addDir(ctx, "/home/stefan/multimedia", 0, []string{"/home/stefan/multimedia/private"})
+	addDir(ctx, "/home/stefan/multimedia/private", 0, []string{"/home/stefan/multimedia/private/photos", "/home/stefan/multimedia/private/music"})
+	addDir(ctx, "/home/stefan/multimedia/private/photos", 6000, nil)
+	addDir(ctx, "/home/stefan/multimedia/private/music", 0, []string{"/home/stefan/multimedia/private/music/rock", "/home/stefan/multimedia/private/music/rap", "/home/stefan/multimedia/private/music/hiphop"})
+	addDir(ctx, "/home/stefan/multimedia/private/music/rock", 4000, nil)
+	addDir(ctx, "/home/stefan/multimedia/private/music/rap", 500, nil)
+	addDir(ctx, "/home/stefan/multimedia/private/music/hiphop", 7000, nil)
 
 	return ctx
 }
@@ -97,8 +97,8 @@ func TestGetTreeHotspots(t *testing.T) {
 	Expect(hotspots[3].Name).To(Equal("/home/stefan/code"))
 }
 
-func addDirInfo(ctx *AnalyzerContext, name string, size int64, children []string) {
-	dirInfo := &DirInfo{Name: name, Size: size, Children: children}
+func addDir(ctx *AnalyzerContext, name string, size int64, children []string) {
+	dirInfo := &Dir{Name: name, Size: size, Children: children}
 	ctx.dirInfos = append(ctx.dirInfos, dirInfo)
 	ctx.dirInfoIdx[name] = dirInfo
 }

@@ -9,19 +9,19 @@ import (
 func createSampleCtx() *AnalyzerContext {
 	ctx := &AnalyzerContext{
 		root:       ".",
-		dirInfos:   DirInfos{},
-		dirInfoIdx: DirInfoIdx{},
+		dirInfos:   Dirs{},
+		dirInfoIdx: DirIdx{},
 	}
 
-	ctx.AddDir(&DirInfo{Name: "."})
-	ctx.AddDir(&DirInfo{Name: "stefan"})
+	ctx.AddDir(&Dir{Name: "."})
+	ctx.AddDir(&Dir{Name: "stefan"})
 	ctx.AddFile(FileInfo{"stefan/file1.txt", 1000})
 	ctx.AddFile(FileInfo{"stefan/file2.txt", 1020})
-	ctx.AddDir(&DirInfo{Name: "stefan/code"})
+	ctx.AddDir(&Dir{Name: "stefan/code"})
 	ctx.AddFile(FileInfo{"stefan/code/file1.txt", 1040})
 	ctx.AddFile(FileInfo{"stefan/file3.txt", 1060})
 	ctx.AddFile(FileInfo{"stefan/file4.txt", 1080})
-	ctx.AddDir(&DirInfo{Name: "stefan/music"})
+	ctx.AddDir(&Dir{Name: "stefan/music"})
 	ctx.AddFile(FileInfo{"stefan/music/song1.mp3", 1100})
 	ctx.AddFile(FileInfo{"stefan/code/file2.txt", 1120})
 	return ctx
@@ -72,10 +72,10 @@ func TestGetHotspotsSorting(t *testing.T) {
 	RegisterTestingT(t)
 
 	ctx := &AnalyzerContext{
-		dirInfos: DirInfos{
-			&DirInfo{"/stefan/music", 0, 1000, nil},
-			&DirInfo{"/stefan", 0, 1100, nil},
-			&DirInfo{"/stefan/code", 0, 1020, nil},
+		dirInfos: Dirs{
+			&Dir{"/stefan/music", 0, 1000, nil},
+			&Dir{"/stefan", 0, 1100, nil},
+			&Dir{"/stefan/code", 0, 1020, nil},
 		},
 	}
 
@@ -122,10 +122,10 @@ func TestGetHotspotsTopLimit(t *testing.T) {
 	}
 
 	ctx := &AnalyzerContext{
-		dirInfos: DirInfos{
-			&DirInfo{"/stefan/music", 0, 1000, nil},
-			&DirInfo{"/stefan", 0, 1100, nil},
-			&DirInfo{"/stefan/code", 0, 1020, nil},
+		dirInfos: Dirs{
+			&Dir{"/stefan/music", 0, 1000, nil},
+			&Dir{"/stefan", 0, 1100, nil},
+			&Dir{"/stefan/code", 0, 1020, nil},
 		},
 	}
 
