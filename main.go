@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	humanize "github.com/dustin/go-humanize"
+	"github.com/sgeisbacher/diskusage-analyzer/collector"
 	"github.com/sgeisbacher/diskusage-analyzer/context"
 	. "github.com/sgeisbacher/diskusage-analyzer/context"
 )
@@ -14,6 +15,7 @@ import (
 var (
 	fileHotspots FileInfos
 	ctx          *AnalyzerContext
+	dirCollector collector.DirInfoCollector
 	topCount     int
 )
 
@@ -28,15 +30,17 @@ func main() {
 
 	fileHotspots = make(FileInfos, topCount)
 	ctx = &context.AnalyzerContext{
+		Root:   ".",
 		Dirs:   Dirs{},
 		DirIdx: DirIdx{},
 	}
 
-	root := "."
-	ctx.Root = root
+	dirCollector = collector.DirInfoCollector{
+		Ctx: ctx,
+	}
 
 	fmt.Println("collecting infos ...")
-	filepath.Walk(root, visit)
+	filepath.Walk(ctx.Root, visit)
 
 	fmt.Println("analyzing ...")
 	fmt.Printf("file-hotspots:\n%v\n", fileHotspots)
@@ -48,10 +52,10 @@ func visit(path string, f os.FileInfo, err error) error {
 	if !f.IsDir() {
 		fileInfo := FileInfo{path, f.Size()}
 		Add(fileHotspots, fileInfo)
-		AddFile(ctx, fileInfo)
+		dirCollector.AddFile(fileInfo)
 	} else {
 		dir := &Dir{Name: path, Children: []string{}}
-		AddDir(ctx, dir)
+		dirCollector.AddDir(dir)
 	}
 	return nil
 }

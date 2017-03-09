@@ -9,33 +9,6 @@ import (
 	. "github.com/sgeisbacher/diskusage-analyzer/context"
 )
 
-func AddFile(ctx *AnalyzerContext, fileInfo FileInfo) {
-	fileParent := filepath.Dir(fileInfo.Name)
-	if fileParent == "." {
-		return
-	}
-	dir, found := ctx.DirIdx[fileParent]
-	if !found {
-		fmt.Println("WARN: dir", fileParent, "NOT FOUND")
-		return
-	}
-	dir.Size += fileInfo.Size
-}
-
-func AddDir(ctx *AnalyzerContext, dir *Dir) {
-	ctx.Dirs = append(ctx.Dirs, dir)
-	ctx.DirIdx[dir.Name] = dir
-	if dir.Name == ctx.Root {
-		return
-	}
-	parent, found := ctx.DirIdx[filepath.Dir(dir.Name)]
-	if !found {
-		fmt.Println("WARN: PARENT NOT FOUND:", filepath.Dir(dir.Name))
-		return
-	}
-	parent.Children = append(parent.Children, dir.Name)
-}
-
 func getOrCreateDir(ctx *AnalyzerContext, path string) *Dir {
 	dir := ctx.DirIdx[path]
 	if dir == nil {
