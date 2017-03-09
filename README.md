@@ -7,5 +7,6 @@ Current Features:
 # Installation
     go get github.com/sgeisbacher/diskusage-analyzer
 # Usage
+    cd path/to/dir/to/analyze
     diskusage-analyzer
 
