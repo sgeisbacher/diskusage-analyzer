@@ -6,8 +6,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func createSampleCtx() *DirHotspotsContext {
-	ctx := &DirHotspotsContext{
+func createSampleCtx() *AnalyzerContext {
+	ctx := &AnalyzerContext{
 		root:       ".",
 		dirInfos:   DirInfos{},
 		dirInfoIdx: DirInfoIdx{},
@@ -71,7 +71,7 @@ func TestAddDirChildren(t *testing.T) {
 func TestGetHotspotsSorting(t *testing.T) {
 	RegisterTestingT(t)
 
-	ctx := &DirHotspotsContext{
+	ctx := &AnalyzerContext{
 		dirInfos: DirInfos{
 			&DirInfo{"/stefan/music", 0, 1000, nil},
 			&DirInfo{"/stefan", 0, 1100, nil},
@@ -121,7 +121,7 @@ func TestGetHotspotsTopLimit(t *testing.T) {
 		{topNum: 4, expectedLen: 3},
 	}
 
-	ctx := &DirHotspotsContext{
+	ctx := &AnalyzerContext{
 		dirInfos: DirInfos{
 			&DirInfo{"/stefan/music", 0, 1000, nil},
 			&DirInfo{"/stefan", 0, 1100, nil},

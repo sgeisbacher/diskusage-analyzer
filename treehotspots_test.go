@@ -7,8 +7,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func buildDirectoryTree() *DirHotspotsContext {
-	ctx := &DirHotspotsContext{
+func buildDirectoryTree() *AnalyzerContext {
+	ctx := &AnalyzerContext{
 		root:       "/home",
 		dirInfos:   DirInfos{},
 		dirInfoIdx: DirInfoIdx{},
@@ -97,7 +97,7 @@ func TestGetTreeHotspots(t *testing.T) {
 	Expect(hotspots[3].Name).To(Equal("/home/stefan/code"))
 }
 
-func addDirInfo(ctx *DirHotspotsContext, name string, size int64, children []string) {
+func addDirInfo(ctx *AnalyzerContext, name string, size int64, children []string) {
 	dirInfo := &DirInfo{Name: name, Size: size, Children: children}
 	ctx.dirInfos = append(ctx.dirInfos, dirInfo)
 	ctx.dirInfoIdx[name] = dirInfo

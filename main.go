@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	fileHotspots   FileInfos
-	dirHotspotsCtx *DirHotspotsContext
-	topCount       int
+	fileHotspots FileInfos
+	ctx          *AnalyzerContext
+	topCount     int
 )
 
 type DirPrinter func(info *DirInfo) string
@@ -25,31 +25,31 @@ func main() {
 	flag.Parse()
 
 	fileHotspots = make(FileInfos, topCount)
-	dirHotspotsCtx = &DirHotspotsContext{
+	ctx = &AnalyzerContext{
 		dirInfos:   DirInfos{},
 		dirInfoIdx: DirInfoIdx{},
 	}
 
 	root := "."
-	dirHotspotsCtx.root = root
+	ctx.root = root
 
 	fmt.Println("collecting infos ...")
 	filepath.Walk(root, visit)
 
 	fmt.Println("analyzing ...")
 	fmt.Printf("file-hotspots:\n%v\n", fileHotspots)
-	fmt.Printf("directory-hotspots:\n%v\n", printDirInfos(dirHotspotsCtx.GetDirHotspots(topCount), printSize))
-	fmt.Printf("tree-hotspots:\n%v\n\n", printDirInfos(dirHotspotsCtx.GetTreeHotspots(topCount), printTotalSize))
+	fmt.Printf("directory-hotspots:\n%v\n", printDirInfos(ctx.GetDirHotspots(topCount), printSize))
+	fmt.Printf("tree-hotspots:\n%v\n\n", printDirInfos(ctx.GetTreeHotspots(topCount), printTotalSize))
 }
 
 func visit(path string, f os.FileInfo, err error) error {
 	if !f.IsDir() {
 		fileInfo := FileInfo{path, f.Size()}
 		fileHotspots.Add(fileInfo)
-		dirHotspotsCtx.AddFile(fileInfo)
+		ctx.AddFile(fileInfo)
 	} else {
 		dirInfo := &DirInfo{Name: path, Children: []string{}}
-		dirHotspotsCtx.AddDir(dirInfo)
+		ctx.AddDir(dirInfo)
 	}
 	return nil
 }

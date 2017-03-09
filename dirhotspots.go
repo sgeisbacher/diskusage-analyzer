@@ -18,7 +18,7 @@ type DirInfos []*DirInfo
 type DirInfosSizeDescSorter []*DirInfo
 type DirInfosTotalSizeDescSorter []*DirInfo
 type DirInfoIdx map[string]*DirInfo
-type DirHotspotsContext struct {
+type AnalyzerContext struct {
 	root       string
 	dirInfos   DirInfos
 	dirInfoIdx DirInfoIdx
@@ -32,7 +32,7 @@ func (dir DirInfosTotalSizeDescSorter) Len() int           { return len(dir) }
 func (dir DirInfosTotalSizeDescSorter) Swap(i, j int)      { dir[i], dir[j] = dir[j], dir[i] }
 func (dir DirInfosTotalSizeDescSorter) Less(i, j int) bool { return dir[i].TotalSize > dir[j].TotalSize }
 
-func (ctx *DirHotspotsContext) AddFile(fileInfo FileInfo) {
+func (ctx *AnalyzerContext) AddFile(fileInfo FileInfo) {
 	fileParent := filepath.Dir(fileInfo.Name)
 	if fileParent == "." {
 		return
@@ -45,7 +45,7 @@ func (ctx *DirHotspotsContext) AddFile(fileInfo FileInfo) {
 	dirInfo.Size += fileInfo.Size
 }
 
-func (ctx *DirHotspotsContext) AddDir(dirInfo *DirInfo) {
+func (ctx *AnalyzerContext) AddDir(dirInfo *DirInfo) {
 	ctx.dirInfos = append(ctx.dirInfos, dirInfo)
 	ctx.dirInfoIdx[dirInfo.Name] = dirInfo
 	if dirInfo.Name == ctx.root {
@@ -59,7 +59,7 @@ func (ctx *DirHotspotsContext) AddDir(dirInfo *DirInfo) {
 	parent.Children = append(parent.Children, dirInfo.Name)
 }
 
-func (ctx *DirHotspotsContext) getOrCreateDirInfo(path string) *DirInfo {
+func (ctx *AnalyzerContext) getOrCreateDirInfo(path string) *DirInfo {
 	dirInfo := ctx.dirInfoIdx[path]
 	if dirInfo == nil {
 		dirInfo = &DirInfo{Name: path}
@@ -78,7 +78,7 @@ func (ctx *DirHotspotsContext) getOrCreateDirInfo(path string) *DirInfo {
 	return dirInfo
 }
 
-func (ctx *DirHotspotsContext) GetDirHotspots(top int) DirInfos {
+func (ctx *AnalyzerContext) GetDirHotspots(top int) DirInfos {
 	sort.Sort(DirInfosSizeDescSorter(ctx.dirInfos))
 	limit := getLimit(len(ctx.dirInfos), top)
 	return ctx.dirInfos[:limit]
@@ -86,7 +86,7 @@ func (ctx *DirHotspotsContext) GetDirHotspots(top int) DirInfos {
 
 type DirInfoFilter func(di *DirInfo) bool
 
-func (ctx *DirHotspotsContext) GetTreeHotspots(top int) DirInfos {
+func (ctx *AnalyzerContext) GetTreeHotspots(top int) DirInfos {
 	ctx.CalcTotalSizes()
 	hotspots := ctx.dirInfos.Filter(isPotentialTreeHotspot(ctx, 0.8))
 
@@ -95,7 +95,7 @@ func (ctx *DirHotspotsContext) GetTreeHotspots(top int) DirInfos {
 	return hotspots[:limit]
 }
 
-func isPotentialTreeHotspot(ctx *DirHotspotsContext, threshold float64) DirInfoFilter {
+func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirInfoFilter {
 	return func(dir *DirInfo) bool {
 		maxRelDiff := float64(0)
 		if len(dir.Children) == 0 {
@@ -127,11 +127,11 @@ func (vs DirInfos) Filter(f DirInfoFilter) DirInfos {
 	return vsf
 }
 
-func (ctx *DirHotspotsContext) CalcTotalSizes() {
+func (ctx *AnalyzerContext) CalcTotalSizes() {
 	ctx.calcTotalSizes(ctx.root)
 }
 
-func (ctx *DirHotspotsContext) calcTotalSizes(path string) int64 {
+func (ctx *AnalyzerContext) calcTotalSizes(path string) int64 {
 	dirInfo, found := ctx.dirInfoIdx[path]
 	if !found {
 		return 0
