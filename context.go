@@ -4,9 +4,9 @@ type Dirs []*Dir
 type DirIdx map[string]*Dir
 
 type AnalyzerContext struct {
-	root       string
-	dirInfos   Dirs
-	dirInfoIdx DirIdx
+	root   string
+	dirs   Dirs
+	dirIdx DirIdx
 }
 
 func (ctx *AnalyzerContext) CalcTotalSizes() {
@@ -14,14 +14,14 @@ func (ctx *AnalyzerContext) CalcTotalSizes() {
 }
 
 func (ctx *AnalyzerContext) calcTotalSizes(path string) int64 {
-	dirInfo, found := ctx.dirInfoIdx[path]
+	dir, found := ctx.dirIdx[path]
 	if !found {
 		return 0
 	}
-	sum := dirInfo.Size
-	for _, childPath := range dirInfo.Children {
+	sum := dir.Size
+	for _, childPath := range dir.Children {
 		sum += ctx.calcTotalSizes(childPath)
 	}
-	dirInfo.TotalSize = sum
+	dir.TotalSize = sum
 	return sum
 }

@@ -30,56 +30,56 @@ func (ctx *AnalyzerContext) AddFile(fileInfo FileInfo) {
 	if fileParent == "." {
 		return
 	}
-	dirInfo, found := ctx.dirInfoIdx[fileParent]
+	dir, found := ctx.dirIdx[fileParent]
 	if !found {
 		fmt.Println("WARN: dir", fileParent, "NOT FOUND")
 		return
 	}
-	dirInfo.Size += fileInfo.Size
+	dir.Size += fileInfo.Size
 }
 
-func (ctx *AnalyzerContext) AddDir(dirInfo *Dir) {
-	ctx.dirInfos = append(ctx.dirInfos, dirInfo)
-	ctx.dirInfoIdx[dirInfo.Name] = dirInfo
-	if dirInfo.Name == ctx.root {
+func (ctx *AnalyzerContext) AddDir(dir *Dir) {
+	ctx.dirs = append(ctx.dirs, dir)
+	ctx.dirIdx[dir.Name] = dir
+	if dir.Name == ctx.root {
 		return
 	}
-	parent, found := ctx.dirInfoIdx[filepath.Dir(dirInfo.Name)]
+	parent, found := ctx.dirIdx[filepath.Dir(dir.Name)]
 	if !found {
-		fmt.Println("WARN: PARENT NOT FOUND:", filepath.Dir(dirInfo.Name))
+		fmt.Println("WARN: PARENT NOT FOUND:", filepath.Dir(dir.Name))
 		return
 	}
-	parent.Children = append(parent.Children, dirInfo.Name)
+	parent.Children = append(parent.Children, dir.Name)
 }
 
 func (ctx *AnalyzerContext) getOrCreateDir(path string) *Dir {
-	dirInfo := ctx.dirInfoIdx[path]
-	if dirInfo == nil {
-		dirInfo = &Dir{Name: path}
-		ctx.dirInfoIdx[path] = dirInfo
-		ctx.dirInfos = append(ctx.dirInfos, dirInfo)
-		parent, found := ctx.dirInfoIdx[filepath.Dir(path)]
+	dir := ctx.dirIdx[path]
+	if dir == nil {
+		dir = &Dir{Name: path}
+		ctx.dirIdx[path] = dir
+		ctx.dirs = append(ctx.dirs, dir)
+		parent, found := ctx.dirIdx[filepath.Dir(path)]
 		if !found {
 			fmt.Println("WARN: parent", filepath.Dir(path), "NOT FOUND")
-			return dirInfo
+			return dir
 		}
 		if parent.Children == nil {
 			parent.Children = []string{}
 		}
 		parent.Children = append(parent.Children, path)
 	}
-	return dirInfo
+	return dir
 }
 
 func (ctx *AnalyzerContext) GetDirHotspots(top int) Dirs {
-	sort.Sort(DirsSizeDescSorter(ctx.dirInfos))
-	limit := getLimit(len(ctx.dirInfos), top)
-	return ctx.dirInfos[:limit]
+	sort.Sort(DirsSizeDescSorter(ctx.dirs))
+	limit := getLimit(len(ctx.dirs), top)
+	return ctx.dirs[:limit]
 }
 
 func (ctx *AnalyzerContext) GetTreeHotspots(top int) Dirs {
 	ctx.CalcTotalSizes()
-	hotspots := ctx.dirInfos.Filter(isPotentialTreeHotspot(ctx, 0.8))
+	hotspots := ctx.dirs.Filter(isPotentialTreeHotspot(ctx, 0.8))
 
 	sort.Sort(DirsTotalSizeDescSorter(hotspots))
 	limit := getLimit(len(hotspots), top)
@@ -93,7 +93,7 @@ func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirFilter {
 			return false
 		}
 		for _, childName := range dir.Children {
-			child, found := ctx.dirInfoIdx[childName]
+			child, found := ctx.dirIdx[childName]
 			if !found {
 				fmt.Printf("warn: child '%v' not found in index!!!!\n", childName)
 				continue

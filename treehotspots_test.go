@@ -9,9 +9,9 @@ import (
 
 func buildDirectoryTree() *AnalyzerContext {
 	ctx := &AnalyzerContext{
-		root:       "/home",
-		dirInfos:   Dirs{},
-		dirInfoIdx: DirIdx{},
+		root:   "/home",
+		dirs:   Dirs{},
+		dirIdx: DirIdx{},
 	}
 
 	addDir(ctx, "/home", 0, []string{"/home/stefan"})
@@ -54,7 +54,7 @@ func TestCalcTotalSizes(t *testing.T) {
 	}
 
 	for _, testData := range tableTestData {
-		Expect(ctx.dirInfoIdx[testData.folderPath].TotalSize).To(Equal(testData.expectedTotalSize))
+		Expect(ctx.dirIdx[testData.folderPath].TotalSize).To(Equal(testData.expectedTotalSize))
 	}
 }
 
@@ -79,8 +79,8 @@ func TestIsPotentialTreeHotspot(t *testing.T) {
 	}
 
 	for _, testData := range tableTestData {
-		dirInfo := ctx.dirInfoIdx[testData.dirPath]
-		Expect(filter(dirInfo)).To(Equal(testData.expectedResult), fmt.Sprintf("%v should be %v", testData.dirPath, testData.expectedResult))
+		dir := ctx.dirIdx[testData.dirPath]
+		Expect(filter(dir)).To(Equal(testData.expectedResult), fmt.Sprintf("%v should be %v", testData.dirPath, testData.expectedResult))
 	}
 }
 
@@ -98,7 +98,7 @@ func TestGetTreeHotspots(t *testing.T) {
 }
 
 func addDir(ctx *AnalyzerContext, name string, size int64, children []string) {
-	dirInfo := &Dir{Name: name, Size: size, Children: children}
-	ctx.dirInfos = append(ctx.dirInfos, dirInfo)
-	ctx.dirInfoIdx[name] = dirInfo
+	dir := &Dir{Name: name, Size: size, Children: children}
+	ctx.dirs = append(ctx.dirs, dir)
+	ctx.dirIdx[name] = dir
 }

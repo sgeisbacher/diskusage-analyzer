@@ -26,8 +26,8 @@ func main() {
 
 	fileHotspots = make(FileInfos, topCount)
 	ctx = &AnalyzerContext{
-		dirInfos:   Dirs{},
-		dirInfoIdx: DirIdx{},
+		dirs:   Dirs{},
+		dirIdx: DirIdx{},
 	}
 
 	root := "."
@@ -48,8 +48,8 @@ func visit(path string, f os.FileInfo, err error) error {
 		fileHotspots.Add(fileInfo)
 		ctx.AddFile(fileInfo)
 	} else {
-		dirInfo := &Dir{Name: path, Children: []string{}}
-		ctx.AddDir(dirInfo)
+		dir := &Dir{Name: path, Children: []string{}}
+		ctx.AddDir(dir)
 	}
 	return nil
 }

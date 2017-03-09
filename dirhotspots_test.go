@@ -8,9 +8,9 @@ import (
 
 func createSampleCtx() *AnalyzerContext {
 	ctx := &AnalyzerContext{
-		root:       ".",
-		dirInfos:   Dirs{},
-		dirInfoIdx: DirIdx{},
+		root:   ".",
+		dirs:   Dirs{},
+		dirIdx: DirIdx{},
 	}
 
 	ctx.AddDir(&Dir{Name: "."})
@@ -32,19 +32,19 @@ func TestAddFileDirSizeCalc(t *testing.T) {
 
 	ctx := createSampleCtx()
 
-	Expect(len(ctx.dirInfos)).To(Equal(4))
+	Expect(len(ctx.dirs)).To(Equal(4))
 
-	Expect(ctx.dirInfos[0].Name).To(Equal("."))
-	Expect(ctx.dirInfos[0].Size).To(Equal(int64(0)))
+	Expect(ctx.dirs[0].Name).To(Equal("."))
+	Expect(ctx.dirs[0].Size).To(Equal(int64(0)))
 
-	Expect(ctx.dirInfos[1].Name).To(Equal("stefan"))
-	Expect(ctx.dirInfos[1].Size).To(Equal(int64(4160)))
+	Expect(ctx.dirs[1].Name).To(Equal("stefan"))
+	Expect(ctx.dirs[1].Size).To(Equal(int64(4160)))
 
-	Expect(ctx.dirInfos[2].Name).To(Equal("stefan/code"))
-	Expect(ctx.dirInfos[2].Size).To(Equal(int64(2160)))
+	Expect(ctx.dirs[2].Name).To(Equal("stefan/code"))
+	Expect(ctx.dirs[2].Size).To(Equal(int64(2160)))
 
-	Expect(ctx.dirInfos[3].Name).To(Equal("stefan/music"))
-	Expect(ctx.dirInfos[3].Size).To(Equal(int64(1100)))
+	Expect(ctx.dirs[3].Name).To(Equal("stefan/music"))
+	Expect(ctx.dirs[3].Size).To(Equal(int64(1100)))
 }
 
 func TestAddDirChildren(t *testing.T) {
@@ -59,7 +59,7 @@ func TestAddDirChildren(t *testing.T) {
 		"stefan/music": {},
 	}
 
-	for _, dir := range ctx.dirInfos {
+	for _, dir := range ctx.dirs {
 		expectedChildren := expectedChildrenMap[dir.Name]
 		Expect(len(dir.Children)).To(Equal(len(expectedChildren)), dir.Name)
 		for i, expectedChild := range expectedChildren {
@@ -72,7 +72,7 @@ func TestGetHotspotsSorting(t *testing.T) {
 	RegisterTestingT(t)
 
 	ctx := &AnalyzerContext{
-		dirInfos: Dirs{
+		dirs: Dirs{
 			&Dir{"/stefan/music", 0, 1000, nil},
 			&Dir{"/stefan", 0, 1100, nil},
 			&Dir{"/stefan/code", 0, 1020, nil},
@@ -122,7 +122,7 @@ func TestGetHotspotsTopLimit(t *testing.T) {
 	}
 
 	ctx := &AnalyzerContext{
-		dirInfos: Dirs{
+		dirs: Dirs{
 			&Dir{"/stefan/music", 0, 1000, nil},
 			&Dir{"/stefan", 0, 1100, nil},
 			&Dir{"/stefan/code", 0, 1020, nil},
