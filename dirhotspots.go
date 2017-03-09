@@ -14,15 +14,8 @@ type Dir struct {
 	Children  []string
 }
 
-type Dirs []*Dir
 type DirsSizeDescSorter []*Dir
 type DirsTotalSizeDescSorter []*Dir
-type DirIdx map[string]*Dir
-type AnalyzerContext struct {
-	root       string
-	dirInfos   Dirs
-	dirInfoIdx DirIdx
-}
 
 func (dir DirsSizeDescSorter) Len() int           { return len(dir) }
 func (dir DirsSizeDescSorter) Swap(i, j int)      { dir[i], dir[j] = dir[j], dir[i] }
@@ -84,8 +77,6 @@ func (ctx *AnalyzerContext) GetDirHotspots(top int) Dirs {
 	return ctx.dirInfos[:limit]
 }
 
-type DirFilter func(di *Dir) bool
-
 func (ctx *AnalyzerContext) GetTreeHotspots(top int) Dirs {
 	ctx.CalcTotalSizes()
 	hotspots := ctx.dirInfos.Filter(isPotentialTreeHotspot(ctx, 0.8))
@@ -117,6 +108,8 @@ func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirFilter {
 	}
 }
 
+type DirFilter func(dir *Dir) bool
+
 func (vs Dirs) Filter(f DirFilter) Dirs {
 	vsf := make(Dirs, 0)
 	for _, v := range vs {
@@ -125,23 +118,6 @@ func (vs Dirs) Filter(f DirFilter) Dirs {
 		}
 	}
 	return vsf
-}
-
-func (ctx *AnalyzerContext) CalcTotalSizes() {
-	ctx.calcTotalSizes(ctx.root)
-}
-
-func (ctx *AnalyzerContext) calcTotalSizes(path string) int64 {
-	dirInfo, found := ctx.dirInfoIdx[path]
-	if !found {
-		return 0
-	}
-	sum := dirInfo.Size
-	for _, childPath := range dirInfo.Children {
-		sum += ctx.calcTotalSizes(childPath)
-	}
-	dirInfo.TotalSize = sum
-	return sum
 }
 
 func getLimit(size int, top int) int {
