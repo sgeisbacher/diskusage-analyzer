@@ -4,17 +4,18 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
+	. "github.com/sgeisbacher/diskusage-analyzer/context"
 )
 
 func TestFileInfosAdd(t *testing.T) {
 	RegisterTestingT(t)
 
 	fileInfos := make(FileInfos, 4)
-	fileInfos.Add(FileInfo{"/file1.txt", 1000})
-	fileInfos.Add(FileInfo{"/file2.txt", 1001})
-	fileInfos.Add(FileInfo{"/file3.txt", 1002})
-	fileInfos.Add(FileInfo{"/file5.txt", 1004})
-	fileInfos.Add(FileInfo{"/file4.txt", 1003})
+	Add(fileInfos, FileInfo{"/file1.txt", 1000})
+	Add(fileInfos, FileInfo{"/file2.txt", 1001})
+	Add(fileInfos, FileInfo{"/file3.txt", 1002})
+	Add(fileInfos, FileInfo{"/file5.txt", 1004})
+	Add(fileInfos, FileInfo{"/file4.txt", 1003})
 
 	Expect(len(fileInfos)).To(Equal(4))
 	Expect(fileInfos[0].Name).To(Equal("/file5.txt"))

@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	. "github.com/onsi/gomega"
+	. "github.com/sgeisbacher/diskusage-analyzer/context"
 )
 
 func buildDirectoryTree() *AnalyzerContext {
 	ctx := &AnalyzerContext{
-		root:   "/home",
-		dirs:   Dirs{},
-		dirIdx: DirIdx{},
+		Root:   "/home",
+		Dirs:   Dirs{},
+		DirIdx: DirIdx{},
 	}
 
 	addDir(ctx, "/home", 0, []string{"/home/stefan"})
@@ -54,7 +55,7 @@ func TestCalcTotalSizes(t *testing.T) {
 	}
 
 	for _, testData := range tableTestData {
-		Expect(ctx.dirIdx[testData.folderPath].TotalSize).To(Equal(testData.expectedTotalSize))
+		Expect(ctx.DirIdx[testData.folderPath].TotalSize).To(Equal(testData.expectedTotalSize))
 	}
 }
 
@@ -79,7 +80,7 @@ func TestIsPotentialTreeHotspot(t *testing.T) {
 	}
 
 	for _, testData := range tableTestData {
-		dir := ctx.dirIdx[testData.dirPath]
+		dir := ctx.DirIdx[testData.dirPath]
 		Expect(filter(dir)).To(Equal(testData.expectedResult), fmt.Sprintf("%v should be %v", testData.dirPath, testData.expectedResult))
 	}
 }
@@ -88,7 +89,7 @@ func TestGetTreeHotspots(t *testing.T) {
 	RegisterTestingT(t)
 
 	ctx := buildDirectoryTree()
-	hotspots := ctx.GetTreeHotspots(100)
+	hotspots := GetTreeHotspots(ctx, 100)
 
 	Expect(len(hotspots)).To(Equal(4))
 	Expect(hotspots[0].Name).To(Equal("/home/stefan"))
@@ -99,6 +100,6 @@ func TestGetTreeHotspots(t *testing.T) {
 
 func addDir(ctx *AnalyzerContext, name string, size int64, children []string) {
 	dir := &Dir{Name: name, Size: size, Children: children}
-	ctx.dirs = append(ctx.dirs, dir)
-	ctx.dirIdx[name] = dir
+	ctx.Dirs = append(ctx.Dirs, dir)
+	ctx.DirIdx[name] = dir
 }

@@ -5,32 +5,16 @@ import (
 	"math"
 	"path/filepath"
 	"sort"
+
+	. "github.com/sgeisbacher/diskusage-analyzer/context"
 )
 
-type Dir struct {
-	Name      string
-	TotalSize int64
-	Size      int64
-	Children  []string
-}
-
-type DirsSizeDescSorter []*Dir
-type DirsTotalSizeDescSorter []*Dir
-
-func (dir DirsSizeDescSorter) Len() int           { return len(dir) }
-func (dir DirsSizeDescSorter) Swap(i, j int)      { dir[i], dir[j] = dir[j], dir[i] }
-func (dir DirsSizeDescSorter) Less(i, j int) bool { return dir[i].Size > dir[j].Size }
-
-func (dir DirsTotalSizeDescSorter) Len() int           { return len(dir) }
-func (dir DirsTotalSizeDescSorter) Swap(i, j int)      { dir[i], dir[j] = dir[j], dir[i] }
-func (dir DirsTotalSizeDescSorter) Less(i, j int) bool { return dir[i].TotalSize > dir[j].TotalSize }
-
-func (ctx *AnalyzerContext) AddFile(fileInfo FileInfo) {
+func AddFile(ctx *AnalyzerContext, fileInfo FileInfo) {
 	fileParent := filepath.Dir(fileInfo.Name)
 	if fileParent == "." {
 		return
 	}
-	dir, found := ctx.dirIdx[fileParent]
+	dir, found := ctx.DirIdx[fileParent]
 	if !found {
 		fmt.Println("WARN: dir", fileParent, "NOT FOUND")
 		return
@@ -38,13 +22,13 @@ func (ctx *AnalyzerContext) AddFile(fileInfo FileInfo) {
 	dir.Size += fileInfo.Size
 }
 
-func (ctx *AnalyzerContext) AddDir(dir *Dir) {
-	ctx.dirs = append(ctx.dirs, dir)
-	ctx.dirIdx[dir.Name] = dir
-	if dir.Name == ctx.root {
+func AddDir(ctx *AnalyzerContext, dir *Dir) {
+	ctx.Dirs = append(ctx.Dirs, dir)
+	ctx.DirIdx[dir.Name] = dir
+	if dir.Name == ctx.Root {
 		return
 	}
-	parent, found := ctx.dirIdx[filepath.Dir(dir.Name)]
+	parent, found := ctx.DirIdx[filepath.Dir(dir.Name)]
 	if !found {
 		fmt.Println("WARN: PARENT NOT FOUND:", filepath.Dir(dir.Name))
 		return
@@ -52,13 +36,13 @@ func (ctx *AnalyzerContext) AddDir(dir *Dir) {
 	parent.Children = append(parent.Children, dir.Name)
 }
 
-func (ctx *AnalyzerContext) getOrCreateDir(path string) *Dir {
-	dir := ctx.dirIdx[path]
+func getOrCreateDir(ctx *AnalyzerContext, path string) *Dir {
+	dir := ctx.DirIdx[path]
 	if dir == nil {
 		dir = &Dir{Name: path}
-		ctx.dirIdx[path] = dir
-		ctx.dirs = append(ctx.dirs, dir)
-		parent, found := ctx.dirIdx[filepath.Dir(path)]
+		ctx.DirIdx[path] = dir
+		ctx.Dirs = append(ctx.Dirs, dir)
+		parent, found := ctx.DirIdx[filepath.Dir(path)]
 		if !found {
 			fmt.Println("WARN: parent", filepath.Dir(path), "NOT FOUND")
 			return dir
@@ -71,15 +55,15 @@ func (ctx *AnalyzerContext) getOrCreateDir(path string) *Dir {
 	return dir
 }
 
-func (ctx *AnalyzerContext) GetDirHotspots(top int) Dirs {
-	sort.Sort(DirsSizeDescSorter(ctx.dirs))
-	limit := getLimit(len(ctx.dirs), top)
-	return ctx.dirs[:limit]
+func GetDirHotspots(ctx *AnalyzerContext, top int) Dirs {
+	sort.Sort(DirsSizeDescSorter(ctx.Dirs))
+	limit := getLimit(len(ctx.Dirs), top)
+	return ctx.Dirs[:limit]
 }
 
-func (ctx *AnalyzerContext) GetTreeHotspots(top int) Dirs {
+func GetTreeHotspots(ctx *AnalyzerContext, top int) Dirs {
 	ctx.CalcTotalSizes()
-	hotspots := ctx.dirs.Filter(isPotentialTreeHotspot(ctx, 0.8))
+	hotspots := ctx.Dirs.Filter(isPotentialTreeHotspot(ctx, 0.8))
 
 	sort.Sort(DirsTotalSizeDescSorter(hotspots))
 	limit := getLimit(len(hotspots), top)
@@ -93,7 +77,7 @@ func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirFilter {
 			return false
 		}
 		for _, childName := range dir.Children {
-			child, found := ctx.dirIdx[childName]
+			child, found := ctx.DirIdx[childName]
 			if !found {
 				fmt.Printf("warn: child '%v' not found in index!!!!\n", childName)
 				continue
@@ -106,18 +90,6 @@ func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirFilter {
 		}
 		return true
 	}
-}
-
-type DirFilter func(dir *Dir) bool
-
-func (vs Dirs) Filter(f DirFilter) Dirs {
-	vsf := make(Dirs, 0)
-	for _, v := range vs {
-		if f(v) {
-			vsf = append(vsf, v)
-		}
-	}
-	return vsf
 }
 
 func getLimit(size int, top int) int {

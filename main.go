@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 
 	humanize "github.com/dustin/go-humanize"
+	"github.com/sgeisbacher/diskusage-analyzer/context"
+	. "github.com/sgeisbacher/diskusage-analyzer/context"
 )
 
 var (
@@ -25,31 +27,31 @@ func main() {
 	flag.Parse()
 
 	fileHotspots = make(FileInfos, topCount)
-	ctx = &AnalyzerContext{
-		dirs:   Dirs{},
-		dirIdx: DirIdx{},
+	ctx = &context.AnalyzerContext{
+		Dirs:   Dirs{},
+		DirIdx: DirIdx{},
 	}
 
 	root := "."
-	ctx.root = root
+	ctx.Root = root
 
 	fmt.Println("collecting infos ...")
 	filepath.Walk(root, visit)
 
 	fmt.Println("analyzing ...")
 	fmt.Printf("file-hotspots:\n%v\n", fileHotspots)
-	fmt.Printf("directory-hotspots:\n%v\n", printDirs(ctx.GetDirHotspots(topCount), printSize))
-	fmt.Printf("tree-hotspots:\n%v\n\n", printDirs(ctx.GetTreeHotspots(topCount), printTotalSize))
+	fmt.Printf("directory-hotspots:\n%v\n", printDirs(GetDirHotspots(ctx, topCount), printSize))
+	fmt.Printf("tree-hotspots:\n%v\n\n", printDirs(GetTreeHotspots(ctx, topCount), printTotalSize))
 }
 
 func visit(path string, f os.FileInfo, err error) error {
 	if !f.IsDir() {
 		fileInfo := FileInfo{path, f.Size()}
-		fileHotspots.Add(fileInfo)
-		ctx.AddFile(fileInfo)
+		Add(fileHotspots, fileInfo)
+		AddFile(ctx, fileInfo)
 	} else {
 		dir := &Dir{Name: path, Children: []string{}}
-		ctx.AddDir(dir)
+		AddDir(ctx, dir)
 	}
 	return nil
 }
