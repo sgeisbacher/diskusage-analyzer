@@ -53,10 +53,10 @@ func TestAddDirChildren(t *testing.T) {
 	ctx := createSampleCtx()
 
 	expectedChildrenMap := map[string][]string{
-		".":            []string{"stefan"},
-		"stefan":       []string{"stefan/code", "stefan/music"},
-		"stefan/code":  []string{},
-		"stefan/music": []string{},
+		".":            {"stefan"},
+		"stefan":       {"stefan/code", "stefan/music"},
+		"stefan/code":  {},
+		"stefan/music": {},
 	}
 
 	for _, dir := range ctx.dirInfos {
