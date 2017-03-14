@@ -1,4 +1,4 @@
-package main
+package detectors
 
 import (
 	"fmt"
@@ -8,28 +8,28 @@ import (
 	. "github.com/sgeisbacher/diskusage-analyzer/context"
 )
 
-func buildDirectoryTree() *AnalyzerContext {
-	ctx := &AnalyzerContext{
+func buildDirectoryTree() AnalyzerContext {
+	ctx := AnalyzerContext{
 		Root:   "/home",
 		Dirs:   Dirs{},
 		DirIdx: DirIdx{},
 	}
 
-	addDir(ctx, "/home", 0, []string{"/home/stefan"})
-	addDir(ctx, "/home/stefan", 10, []string{"/home/stefan/code", "/home/stefan/private", "/home/stefan/multimedia"})
-	addDir(ctx, "/home/stefan/code", 0, []string{"/home/stefan/code/go", "/home/stefan/code/js"})
-	addDir(ctx, "/home/stefan/code/go", 250, nil)
-	addDir(ctx, "/home/stefan/code/js", 350, nil)
-	addDir(ctx, "/home/stefan/private", 210, []string{"/home/stefan/private/docs", "/home/stefan/private/movies"})
-	addDir(ctx, "/home/stefan/private/movies", 37000, nil)
-	addDir(ctx, "/home/stefan/private/docs", 20, nil)
-	addDir(ctx, "/home/stefan/multimedia", 0, []string{"/home/stefan/multimedia/private"})
-	addDir(ctx, "/home/stefan/multimedia/private", 0, []string{"/home/stefan/multimedia/private/photos", "/home/stefan/multimedia/private/music"})
-	addDir(ctx, "/home/stefan/multimedia/private/photos", 6000, nil)
-	addDir(ctx, "/home/stefan/multimedia/private/music", 0, []string{"/home/stefan/multimedia/private/music/rock", "/home/stefan/multimedia/private/music/rap", "/home/stefan/multimedia/private/music/hiphop"})
-	addDir(ctx, "/home/stefan/multimedia/private/music/rock", 4000, nil)
-	addDir(ctx, "/home/stefan/multimedia/private/music/rap", 500, nil)
-	addDir(ctx, "/home/stefan/multimedia/private/music/hiphop", 7000, nil)
+	addDir(&ctx, "/home", 0, []string{"/home/stefan"})
+	addDir(&ctx, "/home/stefan", 10, []string{"/home/stefan/code", "/home/stefan/private", "/home/stefan/multimedia"})
+	addDir(&ctx, "/home/stefan/code", 0, []string{"/home/stefan/code/go", "/home/stefan/code/js"})
+	addDir(&ctx, "/home/stefan/code/go", 250, nil)
+	addDir(&ctx, "/home/stefan/code/js", 350, nil)
+	addDir(&ctx, "/home/stefan/private", 210, []string{"/home/stefan/private/docs", "/home/stefan/private/movies"})
+	addDir(&ctx, "/home/stefan/private/movies", 37000, nil)
+	addDir(&ctx, "/home/stefan/private/docs", 20, nil)
+	addDir(&ctx, "/home/stefan/multimedia", 0, []string{"/home/stefan/multimedia/private"})
+	addDir(&ctx, "/home/stefan/multimedia/private", 0, []string{"/home/stefan/multimedia/private/photos", "/home/stefan/multimedia/private/music"})
+	addDir(&ctx, "/home/stefan/multimedia/private/photos", 6000, nil)
+	addDir(&ctx, "/home/stefan/multimedia/private/music", 0, []string{"/home/stefan/multimedia/private/music/rock", "/home/stefan/multimedia/private/music/rap", "/home/stefan/multimedia/private/music/hiphop"})
+	addDir(&ctx, "/home/stefan/multimedia/private/music/rock", 4000, nil)
+	addDir(&ctx, "/home/stefan/multimedia/private/music/rap", 500, nil)
+	addDir(&ctx, "/home/stefan/multimedia/private/music/hiphop", 7000, nil)
 
 	return ctx
 }
@@ -89,8 +89,9 @@ func TestGetTreeHotspots(t *testing.T) {
 	RegisterTestingT(t)
 
 	ctx := buildDirectoryTree()
-	hotspots := GetTreeHotspots(ctx, 100)
+	hotspots, err := TreeHotspotsDetector{}.Detect(ctx, 100)
 
+	Expect(err).To(BeNil())
 	Expect(len(hotspots)).To(Equal(4))
 	Expect(hotspots[0].Name).To(Equal("/home/stefan"))
 	Expect(hotspots[1].Name).To(Equal("/home/stefan/multimedia/private"))

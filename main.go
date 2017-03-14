@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	humanize "github.com/dustin/go-humanize"
 	"github.com/sgeisbacher/diskusage-analyzer/collector"
 	"github.com/sgeisbacher/diskusage-analyzer/context"
 	. "github.com/sgeisbacher/diskusage-analyzer/context"
+	"github.com/sgeisbacher/diskusage-analyzer/detectors"
 )
 
 var (
@@ -18,8 +18,6 @@ var (
 	dirCollector collector.DirInfoCollector
 	topCount     int
 )
-
-type DirPrinter func(info *Dir) string
 
 func init() {
 	flag.IntVar(&topCount, "n", 10, "limit top-hotspots count")
@@ -39,13 +37,24 @@ func main() {
 		Ctx: ctx,
 	}
 
+	hotspotsDetectors := []detectors.HotspotsDetector{
+		detectors.DirHotspotsDetector{},
+		detectors.TreeHotspotsDetector{},
+	}
+
 	fmt.Println("collecting infos ...")
 	filepath.Walk(ctx.Root, visit)
 
 	fmt.Println("analyzing ...")
 	fmt.Printf("file-hotspots:\n%v\n", fileHotspots)
-	fmt.Printf("directory-hotspots:\n%v\n", printDirs(GetDirHotspots(ctx, topCount), printSize))
-	fmt.Printf("tree-hotspots:\n%v\n\n", printDirs(GetTreeHotspots(ctx, topCount), printTotalSize))
+	for _, detector := range hotspotsDetectors {
+		hotDirs, err := detector.Detect(*ctx, topCount)
+		if err != nil {
+			fmt.Printf("%v: %v", detector.GetName(), err)
+			continue
+		}
+		fmt.Printf("%v:\n%v\n", detector.GetName(), printDirs(hotDirs, detector.GetDirPrinter()))
+	}
 }
 
 func visit(path string, f os.FileInfo, err error) error {
@@ -66,12 +75,4 @@ func printDirs(infos Dirs, printer DirPrinter) string {
 		result += printer(info) + "\n"
 	}
 	return result
-}
-
-func printSize(info *Dir) string {
-	return fmt.Sprintf("%10s  %v", humanize.Bytes(uint64(info.Size)), info.Name)
-}
-
-func printTotalSize(info *Dir) string {
-	return fmt.Sprintf("%10s  %v", humanize.Bytes(uint64(info.TotalSize)), info.Name)
 }

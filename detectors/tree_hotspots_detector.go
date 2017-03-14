@@ -1,29 +1,28 @@
-package main
+package detectors
 
 import (
 	"fmt"
 	"math"
 	"sort"
 
+	humanize "github.com/dustin/go-humanize"
 	. "github.com/sgeisbacher/diskusage-analyzer/context"
 )
 
-func GetDirHotspots(ctx *AnalyzerContext, top int) Dirs {
-	sort.Sort(DirsSizeDescSorter(ctx.Dirs))
-	limit := getLimit(len(ctx.Dirs), top)
-	return ctx.Dirs[:limit]
-}
+type TreeHotspotsDetector struct{}
 
-func GetTreeHotspots(ctx *AnalyzerContext, top int) Dirs {
+func (detector TreeHotspotsDetector) GetName() string { return "tree-node hotspots" }
+
+func (detector TreeHotspotsDetector) Detect(ctx AnalyzerContext, top int) (Dirs, error) {
 	ctx.CalcTotalSizes()
 	hotspots := ctx.Dirs.Filter(isPotentialTreeHotspot(ctx, 0.8))
 
 	sort.Sort(DirsTotalSizeDescSorter(hotspots))
 	limit := getLimit(len(hotspots), top)
-	return hotspots[:limit]
+	return hotspots[:limit], nil
 }
 
-func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirFilter {
+func isPotentialTreeHotspot(ctx AnalyzerContext, threshold float64) DirFilter {
 	return func(dir *Dir) bool {
 		maxRelDiff := float64(0)
 		if len(dir.Children) == 0 {
@@ -45,14 +44,8 @@ func isPotentialTreeHotspot(ctx *AnalyzerContext, threshold float64) DirFilter {
 	}
 }
 
-func getLimit(size int, top int) int {
-	switch {
-	case top <= 0:
-		return size
-	case top > 0 && top <= size:
-		return top
-	case top > size:
-		return size
+func (detector TreeHotspotsDetector) GetDirPrinter() DirPrinter {
+	return func(info *Dir) string {
+		return fmt.Sprintf("%10s  %v", humanize.Bytes(uint64(info.TotalSize)), info.Name)
 	}
-	return 3
 }

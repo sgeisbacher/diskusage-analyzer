@@ -7,6 +7,8 @@ type Dir struct {
 	Children  []string
 }
 
+type DirPrinter func(info *Dir) string
+
 type DirsSizeDescSorter []*Dir
 type DirsTotalSizeDescSorter []*Dir
 
