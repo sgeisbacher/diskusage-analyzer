@@ -3,30 +3,10 @@ package main
 import (
 	"fmt"
 	"math"
-	"path/filepath"
 	"sort"
 
 	. "github.com/sgeisbacher/diskusage-analyzer/context"
 )
-
-func getOrCreateDir(ctx *AnalyzerContext, path string) *Dir {
-	dir := ctx.DirIdx[path]
-	if dir == nil {
-		dir = &Dir{Name: path}
-		ctx.DirIdx[path] = dir
-		ctx.Dirs = append(ctx.Dirs, dir)
-		parent, found := ctx.DirIdx[filepath.Dir(path)]
-		if !found {
-			fmt.Println("WARN: parent", filepath.Dir(path), "NOT FOUND")
-			return dir
-		}
-		if parent.Children == nil {
-			parent.Children = []string{}
-		}
-		parent.Children = append(parent.Children, path)
-	}
-	return dir
-}
 
 func GetDirHotspots(ctx *AnalyzerContext, top int) Dirs {
 	sort.Sort(DirsSizeDescSorter(ctx.Dirs))
