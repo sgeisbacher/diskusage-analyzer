@@ -4,9 +4,10 @@ type Dirs []*Dir
 type DirIdx map[string]*Dir
 
 type AnalyzerContext struct {
-	Root   string
-	Dirs   Dirs
-	DirIdx DirIdx
+	Root         string
+	FileHotspots FileInfos
+	Dirs         Dirs
+	DirIdx       DirIdx
 }
 
 func (ctx *AnalyzerContext) CalcTotalSizes() {

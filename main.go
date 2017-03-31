@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	fileHotspots FileInfos
-	ctx          *AnalyzerContext
-	dirCollector collector.DirInfoCollector
-	topCount     int
+	ctx           *AnalyzerContext
+	fileCollector collector.FileInfoCollector
+	dirCollector  collector.DirInfoCollector
+	topCount      int
 )
 
 func init() {
@@ -26,18 +26,18 @@ func init() {
 func main() {
 	flag.Parse()
 
-	fileHotspots = make(FileInfos, topCount)
 	ctx = &context.AnalyzerContext{
-		Root:   ".",
-		Dirs:   Dirs{},
-		DirIdx: DirIdx{},
+		Root:         ".",
+		FileHotspots: make(FileInfos, topCount),
+		Dirs:         Dirs{},
+		DirIdx:       DirIdx{},
 	}
 
-	dirCollector = collector.DirInfoCollector{
-		Ctx: ctx,
-	}
+	fileCollector = collector.FileInfoCollector{Ctx: ctx}
+	dirCollector = collector.DirInfoCollector{Ctx: ctx}
 
 	hotspotsDetectors := []detectors.HotspotsDetector{
+		detectors.FileHotspotsDetector{},
 		detectors.DirHotspotsDetector{},
 		detectors.TreeHotspotsDetector{},
 	}
@@ -46,33 +46,25 @@ func main() {
 	filepath.Walk(ctx.Root, visit)
 
 	fmt.Println("analyzing ...")
-	fmt.Printf("file-hotspots:\n%v\n", fileHotspots)
 	for _, detector := range hotspotsDetectors {
-		hotDirs, err := detector.Detect(*ctx, topCount)
+		hotspots, err := detector.Detect(*ctx, topCount)
 		if err != nil {
 			fmt.Printf("%v: %v", detector.GetName(), err)
 			continue
 		}
-		fmt.Printf("%v:\n%v\n", detector.GetName(), printDirs(hotDirs, detector.GetDirPrinter()))
+
+		fmt.Printf("%v:\n%v\n\n", detector.GetName(), hotspots)
 	}
 }
 
 func visit(path string, f os.FileInfo, err error) error {
 	if !f.IsDir() {
 		fileInfo := FileInfo{path, f.Size()}
-		Add(fileHotspots, fileInfo)
+		fileCollector.AddFile(fileInfo)
 		dirCollector.AddFile(fileInfo)
 	} else {
 		dir := &Dir{Name: path, Children: []string{}}
 		dirCollector.AddDir(dir)
 	}
 	return nil
-}
-
-func printDirs(infos Dirs, printer DirPrinter) string {
-	result := ""
-	for _, info := range infos {
-		result += printer(info) + "\n"
-	}
-	return result
 }
